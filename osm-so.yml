@@ -1,0 +1,23 @@
+- name: Create host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - { role: common, server_name: osm-so, server_groups: osm-so , flavor: osm}
+
+- name: Setup soft
+  hosts: osm-so
+  roles:
+    - docker
+    - role: consul-agent
+      private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
+      public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+      consul_server: "{{ hostvars['consul']['private_v4'] }}"
+    - role: osm-so 
+      dns_domain: 'consul'
+      dns_server: "{{ hostvars['localhost']['server_private_v4'] }}"
+      vca_server: 'osm-vca-17070.service.dc1.consul'
+      vca_user: "{{ hostvars['osm-ro']['juju_user'] }}"
+      vca_password: "{{ hostvars['osm-ro']['juju_password'] }}"
+      ro_server: 'osm-ro-9090.service.dc1.consul'
+      ro_tenant_id: "{{ hostvars['osm-ro']['ro_tenant_id'] }}"

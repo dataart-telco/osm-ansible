@@ -1,0 +1,30 @@
+---
+- debug:
+    msg: "Start consul agent on address: {{ private_v4 }};"
+
+- name: Install Consul Agent
+  docker_container:
+    name: consul-agent
+    image: 'consul'
+    network_mode: host
+    command: "agent -client=0.0.0.0 -dns-port=53 -recursor=8.8.8.8 -join={{consul_server}}"
+    state: started
+    pull: true
+    restart_policy: always
+    env:
+        CONSUL_ALLOW_PRIVILEGED_PORTS: ''
+        CONSUL_BIND_INTERFACE: ens3
+
+#docker run -d --name consul-agent --net host -e 'CONSUL_ALLOW_PRIVILEGED_PORTS=' consul agent -bind=10.5.6.39 -client=172.17.0.1 -dns-port=53 -recursor=8.8.8.8 -node=node1 -join=10.5.6.4
+
+- name: Install Registrator
+  docker_container:
+    name: registrator
+    image: 'gliderlabs/registrator:latest'
+    network_mode: host
+    command: "consul://localhost:8500"
+    state: started
+    pull: true
+    restart_policy: always
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock"

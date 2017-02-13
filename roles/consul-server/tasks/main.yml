@@ -1,0 +1,35 @@
+---
+- debug:
+    msg: "Start consul on address: {{ private_v4 }};"
+
+- name: Install Consul Server
+  docker_container:
+    name: consul-server
+    image: 'consul'
+    network_mode: host
+    command: "agent -server -client=0.0.0.0 -bootstrap-expect=1"
+    state: started
+    pull: true
+    restart_policy: always
+    env:
+        CONSUL_LOCAL_CONFIG: '{"skip_leave_on_interrupt": true}'
+        CONSUL_BIND_INTERFACE: ens3
+
+#docker run -d --net host --name consul-server -d -e 'CONSUL_LOCAL_CONFIG={"skip_leave_on_interrupt": true}' consul agent -server -bind=10.5.6.4 -client=10.5.6.4 -node=node0 -bootstrap-expect=1
+
+# - name: Install Registrator
+#   docker_container:
+#     name: registrator
+#     image: 'gliderlabs/registrator:latest'
+#     network_mode: host
+#     command: "consul://localhost:8500"
+#     state: started
+#     pull: true
+#     restart_policy: always
+#     volumes:
+#       - "/var/run/docker.sock:/tmp/docker.sock"
+
+- name: export Consul info
+  set_fact:
+    private_v4: "{{ private_v4 }}"
+    public_v4: "{{ public_v4 }}"

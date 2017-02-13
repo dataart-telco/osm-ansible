@@ -1,0 +1,14 @@
+---
+- name: Install OSM-RO
+  docker_container:
+    name: osm-ro
+    image: 'datelco/osm-ro:v1.1'
+    state: started
+    pull: true
+    restart_policy: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - "/var/log/osm/openmano/logs:/opt/openmano/logs"
+
+- include: configure.yml

@@ -1,0 +1,20 @@
+- name: Create host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - { role: common, server_name: osm-ui, server_groups: osm-ui }
+
+- name: Setup soft
+  hosts: osm-ui
+  roles:
+    - docker
+    - role: consul-agent
+      private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
+      public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+      consul_server: "{{ hostvars['consul']['private_v4'] }}"
+    - role: osm-ui
+      dns_domain: 'consul'
+      dns_server: "{{ hostvars['localhost']['server_private_v4'] }}"
+      api_server: 'osm-so-8888.service.dc1.consul'
+      

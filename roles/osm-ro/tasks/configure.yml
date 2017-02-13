@@ -1,0 +1,40 @@
+---
+- name: Detach Datacenter
+  docker_exec: 
+    command: 'bach -c "export OPENMANO_TENANT=osm; openmano datacenter-detach openstack"'
+    name: osm-ro
+
+- name: Remove Datacenter
+  docker_exec: 
+    command: 'bach -c "export OPENMANO_TENANT=osm; openmano datacenter-delete -f openstack"'
+    name: osm-ro
+
+- name: Remove Tenant
+  docker_exec: 
+    command: 'bach -c "export OPENMANO_TENANT=osm; openmano tenant-delete -f osm"'
+    name: osm-ro
+
+- name: Add Tenant
+  docker_exec: 
+    command: 'openmano tenant-create osm'
+    name: osm-ro
+  register: tenant
+
+- name: Add Openstack
+  docker_exec: 
+    command: "export OPENMANO_TENANT=osm; openmano datacenter-create --type openstack --description 'OpenStack Datacenter' --config='{use_floating_ip: true}' openstack {{ lookup('env','OS_AUTH_URL') }}"
+    name: osm-ro
+
+- name: Attach Openstack
+  docker_exec: 
+    command: "export OPENMANO_TENANT=osm; openmano datacenter-attach openstack --user={{ lookup('env','OS_USERNAME') }} --password={{ lookup('env','OS_PASSWORD') }} --vim-tenant-name={{ lookup('env','OS_TENANT_NAME') }}"
+    name: osm-ro
+
+- name: Read networks
+  docker_exec: 
+    command: "export OPENMANO_TENANT=osm; OPENMANO_DATACENTER=openstack; openmano datacenter-netmap-import --force"
+    name: osm-ro
+
+- name: export RO info
+  set_fact:
+    ro_tenant_id: "{{ tenant.result }}"

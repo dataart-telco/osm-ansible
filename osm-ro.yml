@@ -1,0 +1,16 @@
+- name: Create host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - { role: common, server_name: osm-ro, server_groups: osm-ro }
+
+- name: Setup soft
+  hosts: osm-ro
+  roles:
+    - docker
+    - role: consul-agent
+      private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
+      public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+      consul_server: "{{ hostvars['consul']['private_v4'] }}"
+    - osm-ro

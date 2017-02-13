@@ -1,0 +1,57 @@
+---
+- name: 'Install docker: step1'
+  become: true
+  get_url: 
+    url: https://get.docker.com/
+    dest: /tmp/install_docker.sh
+    mode: 555
+
+- name: Check docker 
+  become: true
+  stat:
+    path: /lib/systemd/system/docker.service
+  register: docker_status
+
+- name: 'Install docker: step2'
+  become: true
+  command: /tmp/install_docker.sh
+  when: docker_status.stat.exists == False
+
+- name: 'Add user to docker group'
+  become: true
+  user: 
+    name: ubuntu
+    groups: docker
+    append: yes
+  when: docker_status.stat.exists == False
+
+- name: 'Configure docker'
+  become: true
+  lineinfile:
+    dest: '/lib/systemd/system/docker.service'
+    regexp: '^ExecStart.*'
+    line: 'ExecStart=/usr/bin/dockerd --userland-proxy=false -H fd://'
+    state: present
+
+- name: Reload dockerd unit
+  become: true
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: docker
+
+- name: 'Install pip'
+  become: true
+  apt:
+    name: python-pip
+    state: present
+
+- name: 'upgrade pip'
+  pip:
+    name: pip
+    extra_args: --upgrade
+
+- name: 'Install docker-py'
+  pip:
+    name: docker-py
+    state: present

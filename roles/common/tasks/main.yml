@@ -1,0 +1,46 @@
+---
+- name: "Launch an instance for {{server_name}}"
+  register: server_vm
+  os_server:
+    state: present
+    name: "{{server_name}}"
+    image: ubuntu_16_04
+    key_name: remote-default
+    timeout: 20
+    flavor: "{{flavor}}"
+    region_name: RegionOne
+    auto_floating_ip: yes
+    network: int-net
+    wait: true
+    meta:
+      hostname: "{{server_name}}"
+      group: osm
+
+- name: Wait for SSH on the Instance
+  command: >
+    ssh -oBatchMode=yes -oStrictHostKeyChecking=no
+    ubuntu@{{server_vm.server.public_v4}} true
+  register: result
+  until: result|success
+  retries: 6
+  delay: 10
+
+- name: Install python
+  command: >
+    ssh -oBatchMode=yes -oStrictHostKeyChecking=no
+    ubuntu@{{server_vm.server.public_v4}} "sudo apt update && sudo apt install -y python"
+  register: result
+  until: result|success
+  retries: 6
+  delay: 10
+
+- name: Add Ubuntu Instance to Inventory
+  add_host: name={{server_name}} groups={{server_groups}}
+            ansible_ssh_host={{ server_vm.server.public_v4 }}
+            ansible_ssh_user=ubuntu
+
+- name: export server info
+  set_fact:
+    server_vm: "{{ server_vm.server }}"
+    server_private_v4: "{{ server_vm.server.private_v4 }}"
+    server_public_v4: "{{ server_vm.server.public_v4 }}"

@@ -1,0 +1,4 @@
+---
+server_name: server_default
+server_groups: server_default_group
+flavor: m1.medium

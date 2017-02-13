@@ -1,0 +1,15 @@
+- name: Create host
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  roles:
+    - { role: common, server_name: consul, server_groups: consul }
+
+- name: Setup soft
+  hosts: consul
+  roles:
+    - docker
+    - { role: consul-server, 
+        private_v4: "{{ hostvars['localhost']['server_private_v4'] }}", 
+        public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+      }

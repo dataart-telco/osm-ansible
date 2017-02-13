@@ -1,0 +1,7 @@
+---
+dns_domain:
+dns_server:
+vca_server: 'osm-vca'
+ro_server: 'osm-ro'
+vca_user: "admin"
+vca_password: 

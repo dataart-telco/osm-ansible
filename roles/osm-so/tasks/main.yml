@@ -1,0 +1,61 @@
+---
+- name: Install OSM-SO
+  docker_container:
+    name: osm-so
+    image: 'datelco/osm-so:v1.1'
+    state: started
+    pull: true
+    restart_policy: always
+    dns_search_domains:
+      - "{{dns_domain}}"
+    dns_servers:
+      - "{{dns_server}}"
+    ports:
+      - "8008:8888"
+      - "4567:4567"
+      - "4568:4568"
+    volumes:
+      - "/var/log/osm/rift-so/:/var/log/rift/"
+      - "/var/data-rift/composer-logos:/usr/rift/usr/share/rw.ui/skyquake/plugins/composer/public/assets/logos"
+
+- name: Wait for OSM-SO
+  uri:
+    url: "https://127.0.0.1:8008"
+    status_code: 404
+    validate_certs: no
+    timeout: 10
+  register: result
+  until: result.status == 404
+  retries: 30
+  delay: 5
+
+- name: Add VCA
+  uri:
+    url: "https://127.0.0.1:8008"
+    method: POST
+    HEADER_accept: application/vnd.yang.data+json
+    HEADER_content-type: application/vnd.yang.data+json
+    user: admin
+    password: admin
+    force_basic_auth: yes
+    body_format: json
+    body: '{"account": [{"name": "osmjuju", "account-type": "juju", "juju": {"ip-address": "{{vca_server}}", "port": "17070", "user": "{{vca_user}}", "secret": "{{vca_password}}"}}]}'
+    status_code: 200
+    validate_certs: no
+    timeout: 10
+    when: vca_password != ""
+
+- name: Add RO
+  uri:
+    url: "https://127.0.0.1:8008"
+    method: PUT
+    HEADER_accept: application/vnd.yang.data+json
+    HEADER_content-type: application/vnd.yang.data+json
+    user: admin
+    password: admin
+    force_basic_auth: yes
+    body_format: json
+    body: '{ "openmano": { "host": "{{ro_server}}", "port": "9090", "tenant-id": "{{ro_tenant_id}}" }, "name": "openmano", "account-type": "openmano" }'
+    status_code: 200
+    validate_certs: no
+    timeout: 10
