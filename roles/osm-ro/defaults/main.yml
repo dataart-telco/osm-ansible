@@ -1,0 +1,6 @@
+---
+os_auth_url:
+os_tenant_name:
+os_user:
+os_password:
+dc_name: openstack

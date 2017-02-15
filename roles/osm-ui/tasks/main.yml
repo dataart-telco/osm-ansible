@@ -11,7 +11,7 @@
     dns_servers:
       - "{{dns_server}}"
     ports:
-      - "9443:8443"
+      - "{{host_port}}:8443"
     env:
         API_SERVER: "{{api_server}}"
     volumes:

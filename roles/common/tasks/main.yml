@@ -6,15 +6,14 @@
     name: "{{server_name}}"
     image: ubuntu_16_04
     key_name: remote-default
-    timeout: 20
+    timeout: 200
     flavor: "{{flavor}}"
-    region_name: RegionOne
     auto_floating_ip: yes
     network: int-net
     wait: true
     meta:
       hostname: "{{server_name}}"
-      group: osm
+      group: "{{server_groups}}"
 
 - name: Wait for SSH on the Instance
   command: >

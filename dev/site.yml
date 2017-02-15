@@ -1,4 +1,4 @@
 - include: consul-server.yml
 - include: osm-ro.yml
-- include: osm-so.yml
-- include: osm-ui.yml
+#- include: osm-so.yml
+#- include: osm-ui.yml

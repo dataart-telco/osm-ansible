@@ -1,17 +1,17 @@
 ---
 - name: Detach Datacenter
   docker_exec: 
-    command: 'bach -c "export OPENMANO_TENANT=osm; openmano datacenter-detach openstack"'
+    command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-detach {{dc_name}}"'
     name: osm-ro
 
 - name: Remove Datacenter
   docker_exec: 
-    command: 'bach -c "export OPENMANO_TENANT=osm; openmano datacenter-delete -f openstack"'
+    command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-delete -f {{dc_name}}"'
     name: osm-ro
 
 - name: Remove Tenant
   docker_exec: 
-    command: 'bach -c "export OPENMANO_TENANT=osm; openmano tenant-delete -f osm"'
+    command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano tenant-delete -f osm"'
     name: osm-ro
 
 - name: Add Tenant
@@ -20,21 +20,41 @@
     name: osm-ro
   register: tenant
 
-- name: Add Openstack
-  docker_exec: 
-    command: "export OPENMANO_TENANT=osm; openmano datacenter-create --type openstack --description 'OpenStack Datacenter' --config='{use_floating_ip: true}' openstack {{ lookup('env','OS_AUTH_URL') }}"
-    name: osm-ro
-
-- name: Attach Openstack
-  docker_exec: 
-    command: "export OPENMANO_TENANT=osm; openmano datacenter-attach openstack --user={{ lookup('env','OS_USERNAME') }} --password={{ lookup('env','OS_PASSWORD') }} --vim-tenant-name={{ lookup('env','OS_TENANT_NAME') }}"
-    name: osm-ro
-
-- name: Read networks
-  docker_exec: 
-    command: "export OPENMANO_TENANT=osm; OPENMANO_DATACENTER=openstack; openmano datacenter-netmap-import --force"
-    name: osm-ro
+- fail:
+    msg: tenant.result
+  when: "'already in use' in tenant.result"
 
 - name: export RO info
   set_fact:
-    ro_tenant_id: "{{ tenant.result }}"
+    ro_tenant_id: "{{ tenant.result.split(' ')[0] }}"
+
+- debug:
+    msg: "Add tenant output: {{ro_tenant_id}}"
+
+- name: Add Openstack
+  docker_exec: 
+    command: "/bin/bash -c \"export OPENMANO_TENANT=osm; openmano datacenter-create --type openstack --description 'OpenStack Datacenter' --config='{use_floating_ip: true}' openstack {{os_auth_url}}\""
+    name: osm-ro
+  register: cmd_result
+
+- fail:
+    msg: cmd_result.result
+  when: "'already in use' in cmd_result.result"
+
+- name: Attach Openstack
+  docker_exec: 
+    command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-attach {{dc_name}} --user={{os_user}} --password={{os_password}} --vim-tenant-name={{os_tenant_name}}"'
+    name: osm-ro
+  register: test2
+
+- debug:
+    msg: "DEBUG2: {{test2.result}}"
+
+- name: Read networks
+  docker_exec: 
+    command: '/bin/bash -c "export OPENMANO_TENANT=osm; export OPENMANO_DATACENTER={{dc_name}}; openmano datacenter-netmap-import --force"'
+    name: osm-ro
+  register: test3
+
+- debug:
+    msg: "DEBUG3: {{test3.result}}"

@@ -31,8 +31,9 @@
 
 - name: Add VCA
   uri:
-    url: "https://127.0.0.1:8008"
+    url: "https://127.0.0.1:8008/api/config/config-agent"
     method: POST
+    status_code: 200,201
     HEADER_accept: application/vnd.yang.data+json
     HEADER_content-type: application/vnd.yang.data+json
     user: admin
@@ -40,15 +41,21 @@
     force_basic_auth: yes
     body_format: json
     body: '{"account": [{"name": "osmjuju", "account-type": "juju", "juju": {"ip-address": "{{vca_server}}", "port": "17070", "user": "{{vca_user}}", "secret": "{{vca_password}}"}}]}'
-    status_code: 200
     validate_certs: no
     timeout: 10
-    when: vca_password != ""
+  when: not(
+          (vca_password is undefined)
+          or
+          (vca_password is none)
+          or
+          (vca_password | trim == '')
+        )
 
 - name: Add RO
   uri:
-    url: "https://127.0.0.1:8008"
+    url: "https://127.0.0.1:8008/api/config/resource-orchestrator"
     method: PUT
+    status_code: 200,201
     HEADER_accept: application/vnd.yang.data+json
     HEADER_content-type: application/vnd.yang.data+json
     user: admin
@@ -56,6 +63,5 @@
     force_basic_auth: yes
     body_format: json
     body: '{ "openmano": { "host": "{{ro_server}}", "port": "9090", "tenant-id": "{{ro_tenant_id}}" }, "name": "openmano", "account-type": "openmano" }'
-    status_code: 200
     validate_certs: no
     timeout: 10

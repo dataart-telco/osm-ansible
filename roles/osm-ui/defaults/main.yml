@@ -2,3 +2,4 @@
 dns_domain:
 dns_server:
 api_server: osm-so
+host_port: 9443
