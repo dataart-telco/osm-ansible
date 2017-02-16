@@ -13,14 +13,14 @@
         public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
   roles:
     - role: docker
-      net_mtu: "{{net_mtu | default('')}}"
+      net_mtu: "{{server_net_mtu | default('')}}"
     - role: osm-ro
       os_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
       os_tenant_name: "{{ lookup('env','OS_TENANT_NAME') }}"
       os_user: "{{ lookup('env','OS_USERNAME') }}"
       os_password: "{{ lookup('env','OS_PASSWORD') }}"
     - role: osm-vca
-      net_mtu: "{{net_mtu | default('')}}"
+      net_mtu: "{{server_net_mtu | default('')}}"
 
 - name: Create host RIFT.IO host
   hosts: localhost
@@ -37,7 +37,7 @@
         public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
   roles:
     - role: docker
-      net_mtu: "{{net_mtu | default('')}}"
+      net_mtu: "{{server_net_mtu | default('')}}"
     - role: osm-so 
       ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
       ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
