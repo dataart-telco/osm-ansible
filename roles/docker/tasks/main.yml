@@ -25,13 +25,22 @@
     append: yes
   when: docker_status.stat.exists == False
 
-- name: 'Configure docker'
+- name: 'Configure docker: userland-proxy'
   become: true
   lineinfile:
     dest: '/lib/systemd/system/docker.service'
-    regexp: '^ExecStart.*'
-    line: 'ExecStart=/usr/bin/dockerd --userland-proxy=false -H fd://'
+    regexp: '^ExecStart=/usr/bin/dockerd'
+    line: 'ExecStart=/usr/bin/dockerd --userland-proxy=false'
     state: present
+
+- name: 'Configure docker: mtu'
+  become: true
+  lineinfile:
+    dest: '/lib/systemd/system/docker.service'
+    regexp: '^ExecStart=/usr/bin/dockerd'
+    line: 'ExecStart=/usr/bin/dockerd --mtu {{net_mtu}}'
+    state: present
+  when: not((net_mtu is undefined) or (net_mtu is none) or (net_mtu | trim == ''))
 
 - name: Reload dockerd unit
   become: true

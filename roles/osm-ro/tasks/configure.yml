@@ -45,16 +45,8 @@
   docker_exec: 
     command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-attach {{dc_name}} --user={{os_user}} --password={{os_password}} --vim-tenant-name={{os_tenant_name}}"'
     name: osm-ro
-  register: test2
-
-- debug:
-    msg: "DEBUG2: {{test2.result}}"
 
 - name: Read networks
   docker_exec: 
     command: '/bin/bash -c "export OPENMANO_TENANT=osm; export OPENMANO_DATACENTER={{dc_name}}; openmano datacenter-netmap-import --force"'
     name: osm-ro
-  register: test3
-
-- debug:
-    msg: "DEBUG3: {{test3.result}}"

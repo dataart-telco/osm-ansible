@@ -12,12 +12,15 @@
         private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
         public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
   roles:
-    - docker
+    - role: docker
+      net_mtu: "{{net_mtu | default('')}}"
     - role: osm-ro
       os_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
       os_tenant_name: "{{ lookup('env','OS_TENANT_NAME') }}"
       os_user: "{{ lookup('env','OS_USERNAME') }}"
       os_password: "{{ lookup('env','OS_PASSWORD') }}"
+    - role: osm-vca
+      net_mtu: "{{net_mtu | default('')}}"
 
 - name: Create host RIFT.IO host
   hosts: localhost
@@ -33,10 +36,14 @@
         private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
         public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
   roles:
-    - docker
+    - role: docker
+      net_mtu: "{{net_mtu | default('')}}"
     - role: osm-so 
       ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
       ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
+      vca_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
+      vca_user: "{{ hostvars['osm-vnfm']['vca_user'] }}"
+      vca_password: "{{ hostvars['osm-vnfm']['vca_password'] }}"
     - role: osm-ui
       host_port: 8443
       api_server: "{{hostvars['localhost']['server_private_v4']}}"
