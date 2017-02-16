@@ -4,12 +4,12 @@
   os_server:
     state: present
     name: "{{server_name}}"
-    image: ubuntu_16_04
-    key_name: remote-default
+    image: "{{ubuntu_image}}"
+    key_name: "{{key_name}}"
     timeout: 200
     flavor: "{{flavor}}"
     auto_floating_ip: yes
-    network: int-net
+    network: "{{network}}"
     wait: true
     meta:
       hostname: "{{server_name}}"

@@ -2,3 +2,6 @@
 server_name: server_default
 server_groups: server_default_group
 flavor: m1.medium
+network: int-net
+key_name: remote-default
+ubuntu_image: ubuntu_16_04
