@@ -3,19 +3,19 @@
     msg: "OSM-VCA MTU: {{net_mtu | default('Not specified')}}"
 
 - name: Install juju
-  become: True
+  become: yes
   apt:
     name: juju
     update_cache: yes
 
 - name: Check env
-  become: False
+  become: no
   shell: juju show-controller {{juju_env_name}}
   ignore_errors: True
   register: env_exists
 
 - name: Configure LXD (step 1)
-  become: True
+  become: yes
   shell: > 
     systemctl restart lxd;
     lxd init --auto;
@@ -24,41 +24,44 @@
     systemctl --system daemon-reload;
   when: env_exists.rc != 0
 
-- name: Configure LXD (step 2)
-  shell: "lxc profile device set default eth0 mtu {{net_mtu}}"
-  when: env_exists.rc != 0 and not((net_mtu is undefined) or (net_mtu is none) or (net_mtu | trim == ''))
-
 - name: Copy LXD config
-  become: True
+  become: yes
   copy:
     src: ./files/lxd-bridge
     dest: /etc/default/lxd-bridge
     mode: 0655
   when: env_exists.rc != 0
 
+- name: Configure LXD (step 2)
+  become: no
+  shell: "lxc profile device set default eth0 mtu {{net_mtu}}"
+  when: env_exists.rc != 0 and not((net_mtu is undefined) or (net_mtu is none) or (net_mtu | trim == ''))
+
 - name: Configure LXD (step 3)
-  become: True
+  become: yes
   shell: > 
     systemctl enable lxd-bridge;
-    systemctl start lxd-bridge;
-    lxc image copy ubuntu:16.04 local: --alias ubuntu-xenial;
+    systemctl restart lxd-bridge;
   when: env_exists.rc != 0    
 
+- name: Download lxc ubuntu image (step 4)
+  become: no
+  shell: > 
+    lxc image copy ubuntu:16.04 local: --alias ubuntu-xenial;
+  when: env_exists.rc != 0
+
 - name: Bootstrap juju
-  become: False
+  become: no
   shell: "juju bootstrap localhost {{juju_env_name}}"
   when: env_exists.rc != 0  
 
 - name: Read juju password
-  become: False
+  become: no
   shell: "juju show-controller {{juju_env_name}} --show-password | grep password | awk '{print $2}'"
   register: juju_password
 
-- debug:
-    msg: "{{juju_password.stdout}}; err = {{juju_password.stderr}}"
-
 - name: Read juju ip
-  become: False
+  become: no
   shell: "juju show-controller {{juju_env_name}} | grep api-endpoint | awk '{print $2}' | cut -d : -f1 | cut -d\\' -f2"
   register: juju_ip
 
