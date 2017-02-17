@@ -1,6 +1,6 @@
 ---
 dns_domain:
-dns_server:
+dns_server: '8.8.8.8'
 vca_server: 'osm-vca'
 ro_server: 'osm-ro'
 vca_user: "admin"

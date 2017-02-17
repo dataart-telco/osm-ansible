@@ -1,4 +1,7 @@
 ---
+- debug:
+    msg: "OSM-VCA MTU: {{net_mtu | default('Not specified')}}"
+
 - name: Install OSM-VCA
   docker_container:
     name: osm-vca
@@ -10,9 +13,6 @@
       - "{{dns_domain}}"
     dns_servers:
       - "{{dns_server}}"
-    ports:
-      - "17070:17070"
-      - "443:443"
     env:
         NET_MTU: "{{net_mtu}}"
     volumes:
@@ -23,24 +23,46 @@
       - "/var/lib/lxd/:/var/lib/lxd/"
       - "/etc/default/lxd-bridge:/etc/default/lxd-bridge"
 
-- name: Wait for Juju
-  uri:
-    url: "https://127.0.0.1:17070"
-    status_code: 200
-    validate_certs: no
-    timeout: 10
-  register: result
-  until: result.status == 200
-  retries: 30
-  delay: 5
+# - name: Wait for Juju
+#   uri:
+#     url: "https://127.0.0.1:17070"
+#     status_code: 200
+#     validate_certs: no
+#     timeout: 10
+#   register: result
+#   until: result.status == 200
+#   retries: 30
+#   delay: 5
 
-- name: Read juju settings
+- name: Read juju password
   docker_exec: 
     command: "/bin/bash -c \"juju show-controller osm --show-password | grep password | awk '{print $2}'\""
     name: osm-vca
-  register: juju_info
+  register: juju_password
+
+- name: Read juju ip
+  docker_exec: 
+    command: "/bin/bash -c \"juju show-controller osm | grep api-endpoint | awk '{print $2}' | cut -d : -f1 | cut -d\\' -f2\""
+    name: osm-vca
+  register: juju_ip
 
 - name: Export credentials
   set_fact:
     vca_user: "admin"
-    vca_password: "{{ juju_info.result }}"
+    vca_password: "{{ juju_password.result.strip() }}"
+    juju_ip_address: "{{ juju_ip.result.strip() }}"
+
+- debug:
+    msg: "pswd: {{vca_password}}; IP: {{juju_ip_address}}"
+
+- name: Setup JUJU nat
+  iptables: 
+    table: nat
+    chain: PREROUTING
+    protocol: tcp
+    match: tcp
+    destination_port: 17070
+    to_destination: "{{juju_ip_address.split(':')[0]}}"
+    jump: DNAT
+    comment: Redirect JUJU traffic
+  become: yes

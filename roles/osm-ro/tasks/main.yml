@@ -6,6 +6,16 @@
     state: started
     pull: true
     restart_policy: always
+    env:
+        DB_NAME: "{{db_name}}"
+        DB_USER: "{{db_user}}"
+        DB_PSWD: "{{db_pswd}}"
+        DB_HOST: "{{db_host}}"
+        DB_PORT: "{{db_port}}"
+    dns_search_domains:
+      - "{{dns_domain}}"
+    dns_servers:
+      - "{{dns_server}}"
     ports:
       - "9090:9090"
     volumes:

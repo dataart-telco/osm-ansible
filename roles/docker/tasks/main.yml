@@ -25,29 +25,39 @@
     append: yes
   when: docker_status.stat.exists == False
 
-- name: 'Configure docker: userland-proxy'
+- name: 'Configure docker: reset'
   become: true
   lineinfile:
     dest: '/lib/systemd/system/docker.service'
-    regexp: '^ExecStart=/usr/bin/dockerd'
-    line: 'ExecStart=/usr/bin/dockerd --userland-proxy=false'
+    regexp: '^ExecStart.*'
+    line: 'ExecStart=/usr/bin/dockerd -H fd://'
     state: present
+
+- name: 'Configure docker: userland-proxy'
+  become: true
+  replace:
+    dest: '/lib/systemd/system/docker.service'
+    regexp: '^ExecStart=/usr/bin/dockerd'
+    replace: 'ExecStart=/usr/bin/dockerd --userland-proxy=false'
+
+- debug:
+    msg: "docker MTU: {{net_mtu | default('Not specified')}}"
 
 - name: 'Configure docker: mtu'
   become: true
-  lineinfile:
+  replace:
     dest: '/lib/systemd/system/docker.service'
     regexp: '^ExecStart=/usr/bin/dockerd'
-    line: 'ExecStart=/usr/bin/dockerd --mtu {{net_mtu}}'
-    state: present
+    replace: 'ExecStart=/usr/bin/dockerd --mtu {{net_mtu}}'
   when: not((net_mtu is undefined) or (net_mtu is none) or (net_mtu | trim == ''))
 
-- name: Reload dockerd unit
+- name: Reload docker unit
   become: true
-  systemd:
-    state: restarted
-    daemon_reload: yes
-    name: docker
+  shell: systemctl daemon-reload
+
+- name: Restart docker
+  become: true
+  shell: systemctl restart docker
 
 - name: 'Install pip'
   become: true

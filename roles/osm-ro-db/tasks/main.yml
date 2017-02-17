@@ -1,0 +1,21 @@
+---
+- name: Install MySQL
+  docker_container:
+    name: osm-ro-db
+    image: mysql
+    state: started
+    pull: true
+    restart_policy: always
+    env:
+        MYSQL_RANDOM_ROOT_PASSWORD: true
+        MYSQL_DATABASE: "{{db_name}}"
+        MYSQL_USER: "{{db_user}}"
+        MYSQL_PASSWORD: "{{db_pswd}}"
+    dns_search_domains:
+      - "{{dns_domain}}"
+    dns_servers:
+      - "{{dns_server}}"
+    ports:
+      - "3306:3306"
+    volumes:
+      - "/var/data-osm/mysql:/var/lib/mysql"

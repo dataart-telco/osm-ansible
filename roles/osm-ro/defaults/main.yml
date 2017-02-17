@@ -1,6 +1,13 @@
 ---
+dns_domain:
+dns_server: '8.8.8.8'
 os_auth_url:
 os_tenant_name:
 os_user:
 os_password:
 dc_name: openstack
+db_host: osm-ro-db
+db_port: 3306
+db_user: mano
+db_pswd: manopw
+db_name: mano_db
