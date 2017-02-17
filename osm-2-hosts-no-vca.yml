@@ -1,0 +1,49 @@
+- name: Create host VNFM host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - { role: common, server_name: osm-vnfm, server_groups: osm-vnfm }
+
+- name: Setup VNFM software
+  hosts: osm-vnfm
+  pre_tasks:
+    - debug:
+        msg: "MTU: {{server_net_mtu | default('Not specified')}}"
+  post_tasks:
+    - set_fact:
+        private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
+        public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+  roles:
+    - role: docker
+      net_mtu: "{{server_net_mtu | default('')}}"
+    - osm-ro-db
+    - role: osm-ro
+      os_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
+      os_tenant_name: "{{ lookup('env','OS_TENANT_NAME') }}"
+      os_user: "{{ lookup('env','OS_USERNAME') }}"
+      os_password: "{{ lookup('env','OS_PASSWORD') }}"
+      db_host: "{{ hostvars['localhost']['server_private_v4'] }}"
+
+- name: Create host RIFT.IO host
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - { role: common, server_name: osm-so, server_groups: osm-so , flavor: osm}
+
+- name: Setup rift.io software
+  hosts: osm-so
+  post_tasks:
+    - set_fact:
+        private_v4: "{{ hostvars['localhost']['server_private_v4'] }}"
+        public_v4: "{{ hostvars['localhost']['server_public_v4'] }}"
+  roles:
+    - role: docker
+      net_mtu: "{{server_net_mtu | default('')}}"
+    - role: osm-so 
+      ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
+      ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
+    - role: osm-ui
+      host_port: 8443
+      api_server: "{{hostvars['localhost']['server_private_v4']}}"
