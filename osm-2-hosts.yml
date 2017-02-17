@@ -24,8 +24,8 @@
       os_user: "{{ lookup('env','OS_USERNAME') }}"
       os_password: "{{ lookup('env','OS_PASSWORD') }}"
       db_host: "{{ hostvars['localhost']['server_private_v4'] }}"
-    # - role: osm-vca
-    #   net_mtu: "{{server_net_mtu | default('')}}"
+    - role: osm-vca
+      net_mtu: "{{server_net_mtu | default('')}}"
 
 - name: Create host RIFT.IO host
   hosts: localhost
@@ -46,9 +46,9 @@
     - role: osm-so 
       ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
       ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
-      # vca_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
-      # vca_user: "{{ hostvars['osm-vnfm']['vca_user'] }}"
-      # vca_password: "{{ hostvars['osm-vnfm']['vca_password'] }}"
+      vca_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
+      vca_user: "{{ hostvars['osm-vnfm']['vca_user'] }}"
+      vca_password: "{{ hostvars['osm-vnfm']['vca_password'] }}"
     - role: osm-ui
       host_port: 8443
       api_server: "{{hostvars['localhost']['server_private_v4']}}"

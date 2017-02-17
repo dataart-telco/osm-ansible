@@ -2,60 +2,74 @@
 - debug:
     msg: "OSM-VCA MTU: {{net_mtu | default('Not specified')}}"
 
-- name: Install OSM-VCA
-  docker_container:
-    name: osm-vca
-    image: 'datelco/osm-vca:v1.1'
-    state: started
-    pull: true
-    restart_policy: always
-    dns_search_domains:
-      - "{{dns_domain}}"
-    dns_servers:
-      - "{{dns_server}}"
-    env:
-        NET_MTU: "{{net_mtu}}"
-    volumes:
-      - "/var/run/dbus:/var/run/dbus"
-      - "/run/systemd:/run/systemd"
-      - "/usr/bin/systemctl:/usr/bin/systemctl"
-      - "/etc/systemd/system:/etc/systemd/system"
-      - "/var/lib/lxd/:/var/lib/lxd/"
-      - "/etc/default/lxd-bridge:/etc/default/lxd-bridge"
+- name: Install juju
+  become: True
+  apt:
+    name: juju
+    update_cache: yes
 
-# - name: Wait for Juju
-#   uri:
-#     url: "https://127.0.0.1:17070"
-#     status_code: 200
-#     validate_certs: no
-#     timeout: 10
-#   register: result
-#   until: result.status == 200
-#   retries: 30
-#   delay: 5
+- name: Check env
+  become: False
+  shell: juju show-controller {{juju_env_name}}
+  ignore_errors: True
+  register: env_exists
+
+- name: Configure LXD (step 1)
+  become: True
+  shell: > 
+    systemctl restart lxd;
+    lxd init --auto;
+    lxd waitready;
+    systemctl stop lxd-bridge;
+    systemctl --system daemon-reload;
+  when: env_exists.rc != 0
+
+- name: Configure LXD (step 2)
+  shell: "lxc profile device set default eth0 mtu {{net_mtu}}"
+  when: env_exists.rc != 0 and not((net_mtu is undefined) or (net_mtu is none) or (net_mtu | trim == ''))
+
+- name: Copy LXD config
+  become: True
+  copy:
+    src: ./files/lxd-bridge
+    dest: /etc/default/lxd-bridge
+    mode: 0655
+  when: env_exists.rc != 0
+
+- name: Configure LXD (step 3)
+  become: True
+  shell: > 
+    systemctl enable lxd-bridge;
+    systemctl start lxd-bridge;
+    lxc image copy ubuntu:16.04 local: --alias ubuntu-xenial;
+  when: env_exists.rc != 0    
+
+- name: Bootstrap juju
+  become: False
+  shell: "juju bootstrap localhost {{juju_env_name}}"
+  when: env_exists.rc != 0  
 
 - name: Read juju password
-  docker_exec: 
-    command: "/bin/bash -c \"juju show-controller osm --show-password | grep password | awk '{print $2}'\""
-    name: osm-vca
+  become: False
+  shell: "juju show-controller {{juju_env_name}} --show-password | grep password | awk '{print $2}'"
   register: juju_password
 
+- debug:
+    msg: "{{juju_password.stdout}}; err = {{juju_password.stderr}}"
+
 - name: Read juju ip
-  docker_exec: 
-    command: "/bin/bash -c \"juju show-controller osm | grep api-endpoint | awk '{print $2}' | cut -d : -f1 | cut -d\\' -f2\""
-    name: osm-vca
+  become: False
+  shell: "juju show-controller {{juju_env_name}} | grep api-endpoint | awk '{print $2}' | cut -d : -f1 | cut -d\\' -f2"
   register: juju_ip
 
 - name: Export credentials
   set_fact:
     vca_user: "admin"
-    vca_password: "{{ juju_password.result.strip() }}"
-    juju_ip_address: "{{ juju_ip.result.strip() }}"
-
-- debug:
-    msg: "pswd: {{vca_password}}; IP: {{juju_ip_address}}"
+    vca_password: "{{ juju_password.stdout.strip() }}"
+    juju_ip_address: "{{ juju_ip.stdout.strip() }}"
 
 - name: Setup JUJU nat
+  become: yes
   iptables: 
     table: nat
     chain: PREROUTING
@@ -65,4 +79,3 @@
     to_destination: "{{juju_ip_address.split(':')[0]}}"
     jump: DNAT
     comment: Redirect JUJU traffic
-  become: yes
