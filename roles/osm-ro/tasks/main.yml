@@ -21,4 +21,13 @@
     volumes:
       - "/var/log/osm/openmano/logs:/opt/openmano/logs"
 
+- name: Wait for start
+  docker_exec: 
+    command: 'openmano tenant-list'
+    name: osm-ro
+  register: step
+  until: "'Connection error' not in step.result"
+  retries: 20
+  delay: 10    
+
 - include: configure.yml

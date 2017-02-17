@@ -3,6 +3,11 @@
   docker_exec: 
     command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-detach {{dc_name}}"'
     name: osm-ro
+  register: step
+
+- fail:
+    msg: tenant.result
+  when: "'Connection error' in step.result"
 
 - name: Remove Datacenter
   docker_exec: 
@@ -37,6 +42,9 @@
     name: osm-ro
   register: cmd_result
 
+- debug:
+    msg: "datacenter-create: {{cmd_result.result}}"
+
 - fail:
     msg: cmd_result.result
   when: "'already in use' in cmd_result.result"
@@ -45,6 +53,14 @@
   docker_exec: 
     command: '/bin/bash -c "export OPENMANO_TENANT=osm; openmano datacenter-attach {{dc_name}} --user={{os_user}} --password={{os_password}} --vim-tenant-name={{os_tenant_name}}"'
     name: osm-ro
+  register: cmd_result
+
+- debug:
+    msg: "datacenter-attach: {{cmd_result.result}}"
+
+- fail:
+    msg: cmd_result.result
+  when: "'{{dc_name}}' not in cmd_result.result"
 
 - name: Read networks
   docker_exec: 
