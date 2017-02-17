@@ -12,10 +12,29 @@ VCA(juju) will be deployd to the host
 
 ### How to use
 
-`ansible-playbook osm-2-hosts.yml`
+#### Configure inventory 
 
-in case you need use specific MTU please specify it as parameter
+You should create custom inventory and define settings(image name, key, flavor and etc) for each groups:
 
-`ansible-playbook -e "server_net_mtu=1400" osm-2-hosts.yml`
+1. osm-vnfm
+2. osm-so
+
+example: *group_vars/osm-vnfm*
+
+```
+ubuntu_image: ubuntu_16_04
+key_name: remote-default
+flavor: m1.medium
+network: int-net
+```
+
+#### Deployment
+
+`ansible-playbook -i inventories/<inventory_name> osm-2-hosts.yml`
+
+in case you need use specific MTU please specify it as parameter or define in `group_vars`
+
+`ansible-playbook -i inventories/<inventory_name> -e "net_mtu=1400" osm-2-hosts.yml`
+
 
 if ansible is not installed on you PC you can use docker image with it - [datelco/ansible](https://hub.docker.com/r/datelco/ansible/)

@@ -3,7 +3,7 @@
   connection: local
   gather_facts: false
   roles:
-    - { role: common, server_name: osm-so, server_groups: osm-so , flavor: osm}
+    - { role: machine, server_name: osm-so, server_groups: osm-so , flavor: osm}
 
 - name: Setup soft
   hosts: osm-so
