@@ -8,3 +8,14 @@ There are a few options:
 
 All scenarios use docker containers for RO, RO-DB, SO and UI.
 VCA(juju) will be deployd to the host
+
+
+### How to use
+
+`ansible-playbook osm-2-hosts.yml`
+
+in case you need use specific MTU please specify it as parameter
+
+`ansible-playbook -e "server_net_mtu=1400" osm-2-hosts.yml`
+
+if ansible is not installed on you PC you can use docker image with it - [datelco/ansible](https://hub.docker.com/r/datelco/ansible/)
