@@ -3,7 +3,9 @@
   connection: local
   gather_facts: false
   roles:
-    - { role: machine, server_name: osm-vnfm, server_groups: osm-vnfm }
+    - role: machine
+      server_name: osm-vnfm
+      server_groups: osm-vnfm 
 
 - name: Setup VNFM software
   hosts: osm-vnfm
@@ -29,7 +31,9 @@
   connection: local
   gather_facts: false
   roles:
-    - { role: machine, server_name: osm-so, server_groups: osm-so , flavor: osm}
+    - role: machine
+      server_name: osm-so
+      server_groups: osm-so
 
 - name: Setup rift.io software
   hosts: osm-so

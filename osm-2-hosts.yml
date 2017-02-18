@@ -35,8 +35,7 @@
     - role: machine
       server_name: osm-so
       server_groups: osm-so
-      flavor: osm
-
+      
 - name: Setup rift.io software
   hosts: osm-so
   post_tasks:
