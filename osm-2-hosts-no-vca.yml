@@ -9,14 +9,13 @@
   hosts: osm-vnfm
   pre_tasks:
     - debug:
-        msg: "MTU: {{server_net_mtu | default('Not specified')}}"
+        msg: "MTU: {{net_mtu | default('Not specified')}}"
   post_tasks:
     - set_fact:
         private_v4: "{{ hostvars['osm-vnfm']['server_private_v4'] }}"
         public_v4: "{{ hostvars['osm-vnfm']['server_public_v4'] }}"
   roles:
-    - role: docker
-      net_mtu: "{{net_mtu | default('')}}"
+    - docker
     - osm-ro-db
     - role: osm-ro
       os_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
@@ -39,8 +38,7 @@
         private_v4: "{{ hostvars['osm-so']['server_private_v4'] }}"
         public_v4: "{{ hostvars['osm-so']['server_public_v4'] }}"
   roles:
-    - role: docker
-      net_mtu: "{{net_mtu | default('')}}"
+    - docker
     - role: osm-so 
       ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
       ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
