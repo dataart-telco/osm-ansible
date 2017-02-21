@@ -18,7 +18,7 @@
 
 - name: Wait for SSH on the Instance
   command: >
-    ssh -oBatchMode=yes -oStrictHostKeyChecking=no
+    ssh -i {{ansible_ssh_private_key_file | default('~/.ssh/id_rsa')}} -oBatchMode=yes -oStrictHostKeyChecking=no
     ubuntu@{{server_vm.server.public_v4}} true
   register: result
   until: result|success
