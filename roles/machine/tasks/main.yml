@@ -10,6 +10,7 @@
     flavor: "{{flavor}}"
     auto_floating_ip: yes
     network: "{{network}}"
+    security_groups: "{{security_groups}}"
     wait: true
     meta:
       hostname: "{{server_name}}"

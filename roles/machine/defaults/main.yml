@@ -5,3 +5,4 @@ flavor: m1.medium
 network: int-net
 key_name: remote-default
 ubuntu_image: ubuntu_16_04
+security_groups: default

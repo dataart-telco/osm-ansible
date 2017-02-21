@@ -87,7 +87,7 @@
   become: yes
   lineinfile:
     state: present
-    path: /etc/rc.local
+    dest: /etc/rc.local
     insertbefore: 'exit 0'
     line: "iptables -t nat -A PREROUTING -p tcp -m tcp --dport 17070 -m comment --comment 'Redirect JUJU traffic' -j DNAT --to-destination {{juju_ip_address.split(':')[0]}}"
   
