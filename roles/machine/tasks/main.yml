@@ -21,7 +21,7 @@
     ubuntu@{{server_vm.server.public_v4}} true
   register: result
   until: result|success
-  retries: 6
+  retries: 10
   delay: 10
 
 - name: Install python

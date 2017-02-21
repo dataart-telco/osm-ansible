@@ -27,7 +27,7 @@
     name: osm-ro
   register: step
   until: "'Connection error' not in step.result"
-  retries: 20
+  retries: 30
   delay: 10    
 
 - include: configure.yml

@@ -82,3 +82,12 @@
     to_destination: "{{juju_ip_address.split(':')[0]}}"
     jump: DNAT
     comment: Redirect JUJU traffic
+
+- name: Store IP tables rule to /etc/rc.local
+  become: yes
+  lineinfile:
+    state: present
+    path: /etc/rc.local
+    insertbefore: 'exit 0'
+    line: "iptables -t nat -A PREROUTING -p tcp -m tcp --dport 17070 -m comment --comment 'Redirect JUJU traffic' -j DNAT --to-destination {{juju_ip_address.split(':')[0]}}"
+  

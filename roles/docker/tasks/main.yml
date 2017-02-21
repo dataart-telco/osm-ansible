@@ -1,17 +1,18 @@
 ---
-- name: 'Install docker: step1'
-  become: true
-  get_url: 
-    url: https://get.docker.com/
-    dest: /tmp/install_docker.sh
-    mode: 555
-
 - name: Check docker 
   become: true
   stat:
     path: /lib/systemd/system/docker.service
   register: docker_status
 
+- name: 'Install docker: step1'
+  become: true
+  get_url: 
+    url: https://get.docker.com/
+    dest: /tmp/install_docker.sh
+    mode: 555
+  when: docker_status.stat.exists == False
+    
 - name: 'Install docker: step2'
   become: true
   command: /tmp/install_docker.sh
@@ -24,6 +25,11 @@
     groups: docker
     append: yes
   when: docker_status.stat.exists == False
+
+# - name: 'Relogin to apply group'
+#   ssh-reconnect: all=True
+#   ignore_errors: True
+#   when: docker_status.stat.exists == False
 
 - name: 'Configure docker: reset'
   become: true
@@ -74,3 +80,19 @@
   pip:
     name: docker-py
     state: present
+
+#TODO use another solution
+- name: Restart machine
+  become: yes
+  shell: sleep 5 && shutdown -r now "Ansible updates triggered"
+  async: 1
+  poll: 0
+  ignore_errors: yes
+  when: docker_status.stat.exists == False
+
+- name: Waiting for server to come back
+  local_action: wait_for host={{ ansible_ssh_host }}
+                state=started
+                timeout=60
+  become: no
+  when: docker_status.stat.exists == False
