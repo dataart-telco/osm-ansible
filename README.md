@@ -12,6 +12,10 @@ VCA(juju) will be deployd to the host
 
 ### How to use
 
+#### Setup dependencies
+
+`ansible-galaxy install -r requirements.yml`
+
 #### Configure inventory 
 
 You should create custom inventory and define settings(image name, key, flavor and etc) for each groups:
@@ -32,9 +36,6 @@ network: int-net
 
 `ansible-playbook -i inventories/<inventory_name> osm-2-hosts.yml`
 
-in case you need use specific MTU please specify it as parameter or define in `group_vars`
-
-`ansible-playbook -i inventories/<inventory_name> -e "net_mtu=1400" osm-2-hosts.yml`
-
+in case you need use specific MTU please define it in `group_vars`
 
 if ansible is not installed on you PC you can use docker image with it - [datelco/ansible](https://hub.docker.com/r/datelco/ansible/)
