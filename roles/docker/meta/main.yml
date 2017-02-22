@@ -1,0 +1,9 @@
+---
+dependencies:
+  - role: angstwad.docker_ubuntu
+    become: true
+    docker_opts: "--userland-proxy=false {{'--mtu {}'.format(net_mtu) if net_mtu else ''}}"
+    pip_install_docker_compose: false
+    install_docker_py_on_1604: true
+    docker_group_members: 
+      - ubuntu

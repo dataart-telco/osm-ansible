@@ -16,14 +16,11 @@
       hostname: "{{server_name}}"
       group: "{{server_groups}}"
 
-- name: Wait for SSH on the Instance
-  command: >
-    ssh -i {{ansible_ssh_private_key_file | default('~/.ssh/id_rsa')}} -oBatchMode=yes -oStrictHostKeyChecking=no
-    ubuntu@{{server_vm.server.public_v4}} true
-  register: result
-  until: result|success
-  retries: 10
-  delay: 10
+- name: Waiting for server to come back
+  wait_for:
+    host: "{{ server_vm.server.public_v4 }}"
+    port: "{{ ansible_port | default(22) }}"
+    state: started
 
 - name: Install python
   command: >
@@ -31,8 +28,19 @@
     ubuntu@{{server_vm.server.public_v4}} "sudo apt update && sudo apt install -y python"
   register: result
   until: result|success
-  retries: 6
+  retries: 3
   delay: 10
+  when: ansible_ssh_private_key_file is undefined
+
+- name: Install python
+  command: >
+    ssh -i {{ansible_ssh_private_key_file}} -oBatchMode=yes -oStrictHostKeyChecking=no
+    ubuntu@{{server_vm.server.public_v4}} "sudo apt update && sudo apt install -y python"
+  register: result
+  until: result|success
+  retries: 3
+  delay: 10
+  when: ansible_ssh_private_key_file is defined
 
 - name: Add Ubuntu Instance to Inventory
   add_host: name={{server_name}} groups={{server_groups}}

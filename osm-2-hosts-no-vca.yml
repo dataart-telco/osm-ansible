@@ -18,8 +18,10 @@
         public_v4: "{{ hostvars['osm-vnfm']['server_public_v4'] }}"
   roles:
     - docker
-    - osm-ro-db
+    - role: osm-ro-db
+      become: true
     - role: osm-ro
+      become: true
       os_auth_url: "{{ lookup('env','OS_AUTH_URL') }}"
       os_tenant_name: "{{ lookup('env','OS_TENANT_NAME') }}"
       os_user: "{{ lookup('env','OS_USERNAME') }}"
@@ -43,9 +45,11 @@
         public_v4: "{{ hostvars['osm-so']['server_public_v4'] }}"
   roles:
     - docker
-    - role: osm-so 
+    - role: osm-so
+      become: true 
       ro_server: "{{ hostvars['osm-vnfm']['private_v4'] }}"
       ro_tenant_id: "{{ hostvars['osm-vnfm']['ro_tenant_id'] }}"
     - role: osm-ui
+      become: true
       host_port: 8443
       api_server: "{{hostvars['osm-so']['server_private_v4']}}"
